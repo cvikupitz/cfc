@@ -13,3 +13,11 @@ Recursively scans and outputs all files that match REGEX.
   -?, --help                  Displays this help message then exits
   --version                   Dispalys the currently installed version
 
+./cfc 'test?*.txt' -ADF --search=/home/users --search=/home/admin --threads=4 --max-depth=5
+/home/admin/Desktop/test1.txt
+/home/admin/Desktop/test2.txt
+/home/admin/Desktop/test100.txt
+/home/users/Cole/test5.txt
+
+Found 4 match(es).
+
