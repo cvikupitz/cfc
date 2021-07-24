@@ -31,7 +31,31 @@
    (5) add '$' to end
  */
 
+#include <stdio.h>
+#include <regex.h>
+
 int main(int argc, char **argv) {
+
+    regex_t exp;
+    regmatch_t matches[100];
+    char buff[1024];
+    int res;
+    char *regex = "^[0-9]+$";
+
+    if (0!= (res = regcomp(&exp, regex, REG_EXTENDED|REG_NEWLINE))) {
+        regerror(res, &exp, buff, sizeof(buff));
+        fprintf(stderr, "Failed to compile the regex '%s' - %s\n", argv[1], buff);
+        return -1;
+    }
+
+    int s = regexec(&exp, argv[1], 100, matches, 0);
+    if (!s) {
+        fprintf(stdout, "Is a match!\n");
+    } else {
+        fprintf(stdout, "Not a match.\n");
+    }
+
+    regfree(&exp);
 
     return 0;
 }

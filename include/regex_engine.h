@@ -25,18 +25,37 @@
 #ifndef _REGEX_ENGINE_H__
 #define _REGEX_ENGINE_H__
 
-/*
+/**
  * Interface for the Regex engine ADT.
  */
 typedef struct regex_engine RegexEngine;
 
-// create the struct
+/**
+ *
+ */
+typedef struct regex_match RegexMatch;
+
+/**
+ * Creates a new instance of the RegexEngine and returns a pointer to the new instance,
+ * or NULL if allocation failed.
+ *
+ * Params:
+ *    None
+ * Returns:
+ *    A RegexEngine* to the new instance, or NULL if allocation failed.
+ */
 RegexEngine *regex_engine_new(void);
 
-// compile the regex
+/**
+ * Compiles the specified regular expression pattern '*pattern' for the regex engine to use
+ * in subsequent calls to 'isMatch()' and 'execute()'. Returns 1 if the pattern compiles successfully,
+ * or 0 if not. FIXME
+ */
 int regex_engine_compile_pattern(RegexEngine *regex, const char *pattern);
 
-// return 1 if matches, 0 if not -- dont save results
+/**
+ * Checks the specified string '*str' against the last compiled regular expression, but does not save any results.
+ */
 int regex_engine_isMatch(RegexEngine *regex, const char *str);
 
 // return 1 if matches, 0 if not -- saves results
