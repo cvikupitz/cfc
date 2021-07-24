@@ -31,11 +31,6 @@
 typedef struct regex_engine RegexEngine;
 
 /**
- *
- */
-typedef struct regex_match RegexMatch;
-
-/**
  * Creates a new instance of the RegexEngine and returns a pointer to the new instance,
  * or NULL if allocation failed.
  *
@@ -60,6 +55,9 @@ int regex_engine_isMatch(RegexEngine *regex, const char *str);
 
 // return 1 if matches, 0 if not -- saves results
 int regex_engine_execute(RegexEngine *regex, const char *str);
+
+// Stores last execution matches
+int regex_engine_getMatches(RegexEngine *regex, RegexMatch **matches, int size);
 
 // get error from last run, if applicable
 int regex_engine_error(RegexEngine *regex, char[] buffer, int size);
