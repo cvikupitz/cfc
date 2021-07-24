@@ -31,6 +31,14 @@
 typedef struct regex_engine RegexEngine;
 
 /**
+ * A dedicated struct to identify each match found during execution.
+ */
+typedef struct {
+    int start;          /* The starting index of the match */
+    int end;            /* The ending index of the match */
+} RegexMatch;
+
+/**
  * Creates a new instance of the RegexEngine and returns a pointer to the new instance,
  * or NULL if allocation failed.
  *
@@ -42,27 +50,65 @@ typedef struct regex_engine RegexEngine;
 RegexEngine *regex_engine_new(void);
 
 /**
- * Compiles the specified regular expression pattern '*pattern' for the regex engine to use
- * in subsequent calls to 'isMatch()' and 'execute()'. Returns 1 if the pattern compiles successfully,
- * or 0 if not. FIXME
+ * FIXME
+ *
+ * Params:
+ *    regex - The RegexEngine to operate on.
+ *    pattern - The regular expression to compile.
+ * Returns:
  */
-int regex_engine_compile_pattern(RegexEngine *regex, const char *pattern);
+int regex_engine_compile_pattern(RegexEngine *regex, const char *pattern, int flags);
 
 /**
- * Checks the specified string '*str' against the last compiled regular expression, but does not save any results.
+ * FIXME
+ *
+ * Params:
+ * Returns:
  */
 int regex_engine_isMatch(RegexEngine *regex, const char *str);
 
-// return 1 if matches, 0 if not -- saves results
+/**
+ * FIXME
+ *
+ * Params:
+ *    regex - The RegexEngine to operate on.
+ *    str - The string to execute the scan on.
+ * Returns:
+ */
 int regex_engine_execute(RegexEngine *regex, const char *str);
 
-// Stores last execution matches
+/**
+ * FIXME
+ *
+ * Params:
+ *    regex - The RegexEngine to operate on.
+ *    matches -
+ *    size -
+ * Returns:
+ *
+ */
 int regex_engine_getMatches(RegexEngine *regex, RegexMatch **matches, int size);
 
-// get error from last run, if applicable
+/**
+ * FIXME
+ *
+ * Params:
+ *    regex - The RegexEngine to operate on.
+ *    buffer - The char array to store the error message.
+ *    size - The max size of the buffer.
+ * Returns:
+ *    0 if successful (the last error was loaded), 1 if not. FIXME
+ */
 int regex_engine_error(RegexEngine *regex, char[] buffer, int size);
 
-// destroy the struct
+/**
+ * Destroys the specified RegexEngine by returning its allocated heap memory.
+ *
+ * Params:
+ *    regex - The RegexEngine to destroy.
+ * Returns:
+ *    None
+ */
 void destroy_regex_engine(RegexEngine *regex);
 
 /*
