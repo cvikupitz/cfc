@@ -22,18 +22,35 @@
  * SOFTWARE.
  */
 
-struct regex_engine {};
+struct regex_engine {
+    regex_t regex;
+    int lastStatus;
+};
 
-RegexEngine *regex_engine_new(void);
+RegexEngine *regex_engine_new(void) {
+    return NULL;
+}
 
-int regex_engine_compile_pattern(RegexEngine *regex, const char *pattern, int flags);
+int regex_engine_compile_pattern(RegexEngine *regex, const char *pattern, int flags) {
+    return 0;
+}
 
-int regex_engine_isMatch(RegexEngine *regex, const char *str);
+int regex_engine_isMatch(RegexEngine *regex, const char *str) {
+    return 0;
+}
 
-int regex_engine_execute(RegexEngine *regex, const char *str);
+int regex_engine_execute(RegexEngine *regex, const char *str) {
+    return 0;
+}
 
-int regex_engine_getMatches(RegexEngine *regex, RegexMatch **matches, int size);
+int regex_engine_getMatches(RegexEngine *regex, RegexMatch **matches, int size) {
+    return 0;
+}
 
-int regex_engine_error(RegexEngine *regex, char[] buffer, int size);
+int regex_engine_error(RegexEngine *regex, char[] buffer, int size) {
+    return 0;
+}
 
-void destroy_regex_engine(RegexEngine *regex);
+void destroy_regex_engine(RegexEngine *regex) {
+
+}

@@ -36,6 +36,16 @@
 
 int main(int argc, char **argv) {
 
+    /*
+     TODO
+     Parse args
+     Create ADTs (TreeSet, LL, and Regex)
+     Create Crawler ADT
+     execute
+     Get results, iterate
+     Destruct all
+     */
+
     regex_t exp;
     regmatch_t matches[100];
     char buff[1024];
