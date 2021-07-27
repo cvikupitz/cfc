@@ -25,24 +25,44 @@
 #ifndef _ARG_PARSER_H__
 #define _ARG_PARSER_H__
 
+/* Maximum number of directories included in search path */
+#define MAX_DIRS 2
+/* Maximum length of inner char buffers - used for storing the pattern and directories */
+#define BUFFER_SIZE 4096
+
+/**
+ * A container used for storing all of the program arguments.
+ * When argp parses the command line arguments, the results will be stored here.
+ */
 typedef struct prog_args {
-    char *regex;                /* The REGEX used for searching file/directory patterns */
-    char **searchPaths;         /* List of directories to recursively search in */
-    int all;                    /* Flag to enable checks for entries starting with '.' */
-    int conflict;               /* Flag to enable opposite search */
-    int maxDepth;               /* Max depth for recursive calls to sub-folders */
-    int checkFolders;           /* Flag to include folders in search */
-    int humanReadable;          /* Flag to enable human-readable file sizes */
-    int ignoreCase;             /* Flag to enable case-insensitive searches */
-    int listFormat;             /* Flag to enable the listing format (similar to ls -l) */
-    long maxResults;            /* The max number of results to display */
-    int quiet;                  /* Flag to disable all logs and results */
-    int reverse;                /* Flag to enable reverse ordering when displaying results */
-    int nThreads;               /* Number of PThreads to use */
+    char regex[BUFFER_SIZE];                    /* The REGEX used for searching file/directory patterns */
+    char searchPaths[MAX_DIRS][BUFFER_SIZE];    /* List of directories to recursively search in */
+    int nPaths;                                 /* Number of paths in search paths array */
+    int all;                                    /* Flag to enable checks for entries starting with '.' */
+    int conflict;                               /* Flag to enable opposite search */
+    int maxDepth;                               /* Max depth for recursive calls to sub-folders */
+    int checkFolders;                           /* Flag to include folders in search */
+    int humanReadable;                          /* Flag to enable human-readable file sizes */
+    int ignoreCase;                             /* Flag to enable case-insensitive searches */
+    int listFormat;                             /* Flag to enable the listing format (similar to ls -l) */
+    long maxResults;                            /* The max number of results to display */
+    int quiet;                                  /* Flag to disable all logs and results */
+    int reverse;                                /* Flag to enable reverse ordering when displaying results */
+    int nThreads;                               /* Number of PThreads to use */
 } ProgArgs;
 
-int prog_args_parse(int argc, char **argv, ProgArgs *progArgs);
-
-void prog_args_free(ProgArgs *args);
+/**
+ * Parses the program arguments and stores the results into 'progArgs'. The caller is
+ * responsible for freeing the struct when finished, and can be done with a single call
+ * to 'free()'.
+ *
+ * Params:
+ *    argc - The number of arguments.
+ *    argv - The argument array.
+ *    progArgs - The 'ProgArgs' struct to store the results in.
+ * Returns:
+ *    The returning value of the inner call to 'argp_parse()'.
+ */
+int prog_args_parse(int argc, char **argv, ProgArgs **progArgs);
 
 #endif  /* _ARG_PARSER_H__ */
