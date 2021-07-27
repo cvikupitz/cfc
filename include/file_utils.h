@@ -21,12 +21,3 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
-#include <stdio.h>
-#include "arg_parser.h"
-
-int main(int argc, char **argv) {
-
-    return prog_args_parse(argc, argv, NULL);
-}
-
