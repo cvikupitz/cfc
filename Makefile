@@ -17,7 +17,8 @@ IFLAGS=-I$(INCLUDE)
 COMPILE=$(CC) $(CFLAGS) $(IFLAGS) -c -o $@ $^
 LINK=$(CC) $(CFLAGS) -o $@ $^
 
-$(SRC)/driver: $(SRC)/driver.o $(SRC)/arg_parser.o $(SRC)/linkedlist.o $(SRC)/treeset.o
+$(SRC)/driver: $(SRC)/driver.o $(SRC)/arg_parser.o $(SRC)/linkedlist.o $(SRC)/treeset.o \
+        $(SRC)/iterator.o $(SRC)/file_utils.o
 	$(LINK)
 
 $(SRC)/%.o: $(SRC)/%.c
