@@ -26,6 +26,19 @@
 #define _FILE_UTILS_H__
 
 /**
+ * Adds the specified file separator 'sep' to the end of the specified file path 'path'
+ * if it is not present, otherwise does nothing. The path buffer is modified in place and
+ * is assumed to be large enough to hold the additional character.
+ *
+ * Params:
+ *    path - The file path to append the separator to.
+ *    sep - The separator character to append.
+ * Returns:
+ *    The resulting path.
+ */
+char *file_path_append(char path[], char sep);
+
+/**
  * Converts the specified file size into human readable format, then stores the result
  * into 'dest'. Assumes 'dest' is large enough to store the result.
  *
@@ -45,6 +58,6 @@
  * Returns:
  *    The char array containing the result.
  */
-char *file_size_readable_format(unsigned long size, char[] dest);
+char *file_size_readable_format(unsigned long size, char dest[]);
 
 #endif  /* _FILE_UTILS_H__ */

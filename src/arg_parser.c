@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "arg_parser.h"
+#include "file_utils.h"
 
 static ProgArgs *prog_args = NULL;
 
@@ -128,9 +129,12 @@ static int parse_options(int key, char *arg, struct argp_state *state) {
             break;
         case 'I':
             {
-                if (prog_args->nPaths >= MAX_DIRS)
+                int i = prog_args->nPaths;
+                if (i >= MAX_DIRS)
                     break;
-                strcpy(prog_args->searchPaths[prog_args->nPaths++], arg);
+                strcpy(prog_args->searchPaths[i], arg);
+                file_path_append(prog_args->searchPaths[i], '/');
+                prog_args->nPaths++;
                 break;
             }
         case 'i':

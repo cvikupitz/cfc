@@ -22,6 +22,9 @@
  * SOFTWARE.
  */
 
+#include <string.h>
+#include "file_utils.h"
+
 #define BYTE 'B'
 #define KILO 'k'
 #define MEGA 'M'
@@ -33,8 +36,18 @@
 #define GIGABYTE (1000 * MEGABYTE)
 #define TERABYTE (1000 * GIGABYTE)
 
-char *file_size_readable_format(unsigned long size, char[] dest) {
+char *file_path_append(char path[], char sep) {
 
+    int len = strlen(path);
+    if (path[len - 1] != sep) {
+        path[len] = sep;
+        path[len + 1] = '\0';
+    }
 
+    return path;
+}
 
+char *file_size_readable_format(unsigned long size, char dest[]) {
+
+    // TODO - implement
 }

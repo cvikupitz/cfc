@@ -26,7 +26,7 @@
 #define _ARG_PARSER_H__
 
 /* Maximum number of directories included in search path */
-#define MAX_DIRS 2
+#define MAX_DIRS 128
 /* Maximum length of inner char buffers - used for storing the pattern and directories */
 #define BUFFER_SIZE 4096
 
