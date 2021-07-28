@@ -21,3 +21,30 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
+#ifndef _FILE_UTILS_H__
+#define _FILE_UTILS_H__
+
+/**
+ * Converts the specified file size into human readable format, then stores the result
+ * into 'dest'. Assumes 'dest' is large enough to store the result.
+ *
+ * Example:
+ *     399 = 399B
+ *     1137 = 1.1k
+ *     5698304 = 5.7M
+ *
+ * The supported metrics are bytes (B), kilobytes (k), megabytes (M), gigabytes (G),
+ * and terabytes (T). No larger metrics are supported and any ones that are larger will
+ * display as terabytes by default (e.g. 2000 terabytes won't convert to petabytes, it will
+ * just convert to '2000T').
+ *
+ * Params:
+ *    size - The size to convert (in bytes).
+ *    dest - The char array to store the result in (assumed to be large enough).
+ * Returns:
+ *    The char array containing the result.
+ */
+char *file_size_readable_format(unsigned long size, char[] dest);
+
+#endif  /* _FILE_UTILS_H__ */

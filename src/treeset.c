@@ -22,9 +22,7 @@
  * SOFTWARE.
  */
 
-#include <math.h>
 #include <stdlib.h>
-#include "boundedstack.h"
 #include "treeset.h"
 
 /*
@@ -675,22 +673,13 @@ Boolean treeset_isEmpty(TreeSet *tree) {
 /*
  * Populates the iteration of treeset elements via an in-order traversal.
  */
-static void populateArray(TreeIter *iter, BoundedStack *toVisit, Node *node) {
+static void populateArray(TreeIter *iter, Node *node) {
 
-    while (node != NULL || boundedstack_isEmpty(toVisit) == FALSE) {
-
-        /* Traverse down to the left-most node */
-        while (node != NULL) {
-            /* Pushes nodes onto visiting stack during left traversal */
-            (void)boundedstack_push(toVisit, node);
-            node = node->left;
-        }
-
-        /* Once leaf node reached, process and move to right subtree */
-        (void)boundedstack_pop(toVisit, (void **)&node);
-        iter->items[iter->next++] = node->data;
-        node = node->right;
-    }
+    if (node == NULL)
+        return;
+    populateArray(iter, node->left);
+    iter->items[iter->next++] = node->data;
+    populateArray(iter, node->right);
 }
 
 /*
@@ -698,7 +687,6 @@ static void populateArray(TreeIter *iter, BoundedStack *toVisit, Node *node) {
  */
 static void **generateArray(TreeSet *tree) {
 
-    BoundedStack *stack;
     size_t bytes;
     void **items = NULL;
 
@@ -708,17 +696,9 @@ static void **generateArray(TreeSet *tree) {
     if (items == NULL)
         return NULL;
 
-    /* Create stack for iterative approach */
-    long capacity = (long)( 2 * ceil( log2(tree->size + 1) ) );  /* Max depth should be <= 2*log2(N + 1) */
-    if (boundedstack_new(&stack, capacity) != OK) {
-        free(items);
-        return NULL;
-    }
-
     /* Collects the array of treeset items */
     TreeIter iter = {items, 0L};
-    populateArray(&iter, stack, tree->root);
-    boundedstack_destroy(stack, NULL);
+    populateArray(&iter, tree->root);
 
     return iter.items;
 }
