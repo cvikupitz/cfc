@@ -38,16 +38,16 @@ typedef struct prog_args {
     char regex[BUFFER_SIZE];                    /* The REGEX used for searching file/directory patterns */
     char searchPaths[MAX_DIRS][BUFFER_SIZE];    /* List of directories to recursively search in */
     int nPaths;                                 /* Number of paths in search paths array */
-    int all;                                    /* Flag to enable checks for entries starting with '.' */
-    int conflict;                               /* Flag to enable opposite search */
+    short all;                                  /* Flag to enable checks for entries starting with '.' */
+    short conflict;                             /* Flag to enable opposite search */
     int maxDepth;                               /* Max depth for recursive calls to sub-folders */
-    int checkFolders;                           /* Flag to include folders in search */
-    int humanReadable;                          /* Flag to enable human-readable file sizes */
-    int ignoreCase;                             /* Flag to enable case-insensitive searches */
-    int listFormat;                             /* Flag to enable the listing format (similar to ls -l) */
+    short checkFolders;                         /* Flag to include folders in search */
+    short humanReadable;                        /* Flag to enable human-readable file sizes */
+    short ignoreCase;                           /* Flag to enable case-insensitive searches */
+    short listFormat;                           /* Flag to enable the listing format (similar to ls -l) */
     long maxResults;                            /* The max number of results to display */
-    int quiet;                                  /* Flag to disable all logs and results */
-    int reverse;                                /* Flag to enable reverse ordering when displaying results */
+    short quiet;                                /* Flag to disable all logs and results */
+    short reverse;                              /* Flag to enable reverse ordering when displaying results */
     int nThreads;                               /* Number of PThreads to use */
 } ProgArgs;
 
