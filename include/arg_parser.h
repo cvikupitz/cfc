@@ -30,6 +30,17 @@
 /* Maximum length of inner char buffers - used for storing the pattern and directories */
 #define BUFFER_SIZE 4096
 
+typedef enum prog_flags {
+    SHOW_ALL            = (1 << 0),     /* Flag to enable checks for entries starting with '.' */
+    CONFLICT            = (1 << 1),     /* Flag to enable opposite search */
+    CHECK_FOLDERS       = (1 << 2),     /* Flag to include folders in search */
+    HUMAN_READABLE      = (1 << 3),     /* Flag to enable human-readable file sizes */
+    IGNORE_CASE         = (1 << 4),     /* Flag to enable case-insensitive searches */
+    LIST_FORMAT         = (1 << 5),     /* Flag to enable the listing format (similar to ls -l) */
+    QUIET               = (1 << 6),     /* Flag to disable all logs and results */
+    REVERSE             = (1 << 7)      /* Flag to enable reverse ordering when displaying results */
+} ProgFlags;
+
 /**
  * A container used for storing all of the program arguments.
  * When argp parses the command line arguments, the results will be stored here.
@@ -38,17 +49,10 @@ typedef struct prog_args {
     char regex[BUFFER_SIZE];                    /* The REGEX used for searching file/directory patterns */
     char searchPaths[MAX_DIRS][BUFFER_SIZE];    /* List of directories to recursively search in */
     int nPaths;                                 /* Number of paths in search paths array */
-    short all;                                  /* Flag to enable checks for entries starting with '.' */
-    short conflict;                             /* Flag to enable opposite search */
     int maxDepth;                               /* Max depth for recursive calls to sub-folders */
-    short checkFolders;                         /* Flag to include folders in search */
-    short humanReadable;                        /* Flag to enable human-readable file sizes */
-    short ignoreCase;                           /* Flag to enable case-insensitive searches */
-    short listFormat;                           /* Flag to enable the listing format (similar to ls -l) */
     long maxResults;                            /* The max number of results to display */
-    short quiet;                                /* Flag to disable all logs and results */
-    short reverse;                              /* Flag to enable reverse ordering when displaying results */
     int nThreads;                               /* Number of PThreads to use */
+    int progFlags;                              /* Holds all the boolean-style flags */
 } ProgArgs;
 
 /**

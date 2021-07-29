@@ -108,10 +108,10 @@ static int parse_options(int key, char *arg, struct argp_state *state) {
 
     switch (key) {
         case 'a':
-            prog_args->all = 1;
+            prog_args->progFlags |= SHOW_ALL;
             break;
         case 'c':
-            prog_args->conflict = 1;
+            prog_args->progFlags |= CONFLICT;
             break;
         case 'D':
             {
@@ -125,7 +125,7 @@ static int parse_options(int key, char *arg, struct argp_state *state) {
                 break;
             }
         case 'F':
-            prog_args->checkFolders = 1;
+            prog_args->progFlags |= CHECK_FOLDERS;
             break;
         case 'I':
             {
@@ -138,7 +138,7 @@ static int parse_options(int key, char *arg, struct argp_state *state) {
                 break;
             }
         case 'i':
-            prog_args->ignoreCase = 1;
+            prog_args->progFlags |= IGNORE_CASE;
             break;
         case 'X':
             {
@@ -152,10 +152,10 @@ static int parse_options(int key, char *arg, struct argp_state *state) {
                 break;
             }
         case 'h':
-            prog_args->humanReadable = 1;
+            prog_args->progFlags |= HUMAN_READABLE;
             break;
         case 'l':
-            prog_args->listFormat = 1;
+            prog_args->progFlags |= LIST_FORMAT;
             break;
         case 'M':
             {
@@ -169,10 +169,10 @@ static int parse_options(int key, char *arg, struct argp_state *state) {
                 break;
             }
         case 'q':
-            prog_args->quiet = 1;
+            prog_args->progFlags |= QUIET;
             break;
         case 'r':
-            prog_args->reverse = 1;
+            prog_args->progFlags |= REVERSE;
             break;
         case ARGP_KEY_ARG:
             {
@@ -220,17 +220,10 @@ int prog_args_parse(int argc, char **argv, ProgArgs **progArgs) {
         return 1;
     } else {
         prog_args->nPaths = 0;
-        prog_args->all = 0;
-        prog_args->conflict = 0;
         prog_args->maxDepth = -1;
-        prog_args->checkFolders = 0;
-        prog_args->ignoreCase = 0;
-        prog_args->humanReadable = 0;
-        prog_args->listFormat = 0;
         prog_args->maxResults = -1;
-        prog_args->quiet = 0;
-        prog_args->reverse = 0;
         prog_args->nThreads = 1;
+        prog_args->progFlags = 0;
     }
 
     if ((result = argp_parse(&argps, argc, argv, 0, 0, &arg_count)) == 0) {
