@@ -47,6 +47,16 @@ char *file_path_append(char path[], char sep) {
     return path;
 }
 
+char *file_path_deduct(char path[], char sep) {
+
+    int len = strlen(path);
+    if (path[len - 1] == sep) {
+        path[len - 1] = '\0';
+    }
+
+    return path;
+}
+
 char *file_size_readable_format(unsigned long size, char dest[]) {
 
     // TODO - implement

@@ -39,6 +39,18 @@
 char *file_path_append(char path[], char sep);
 
 /**
+ * Removes the specified file separator 'sep' from the end of the specified file path
+ * 'path' if it is present, otherwise does nothing. The path buffer is modified in place.
+ *
+ * Params:
+ *    path - The file path to remove from.
+ *    sep - The separator character to subtract.
+ * Returns:
+ *    The resulting path.
+ */
+char *file_path_deduct(char path[], char sep);
+
+/**
  * Converts the specified file size into human readable format, then stores the result
  * into 'dest'. Assumes 'dest' is large enough to store the result.
  *

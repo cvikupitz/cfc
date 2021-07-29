@@ -27,12 +27,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include "arg_parser.h"
-#include "linkedlist.h"
+#include "queue.h"
 #include "treeset.h"
 
 static ProgArgs *args = NULL;
 static TreeSet *results = NULL;
-static LinkedList *paths = NULL;
+static Queue *paths = NULL;
 
 /*
  * Similar to strcmp(char *, char *), but parameters are passed as 'void *' to comply
@@ -59,7 +59,7 @@ static void cleanUp(void) {
     if (results != NULL)
         treeset_destroy(results, free);
     if (paths != NULL)
-        linkedlist_destroy(paths, free);
+        queue_destroy(paths, free);
 }
 
 /*
@@ -69,6 +69,11 @@ static void error(const char *msg) {
     fprintf(stderr, "%s\n", msg);
     cleanUp();
     exit(1);
+}
+
+static void printArgs(char *name, int pos, unsigned int flags) {
+    int state = ((flags & (pos << 1)) ? 1 : 0);
+    fprintf(stdout, "%s=%d\n", name, state);
 }
 
 /*
@@ -85,10 +90,10 @@ int main(int argc, char **argv) {
         return status;
 
     /* Instantiate the necessary ADTs */
-    comparator = (args->reverse == 0) ? str_comparison : str_comparison_reverse;
+    comparator = str_comparison;//(args->reverse == 0) ? str_comparison : str_comparison_reverse;//FIXME
     if (treeset_new(&results, comparator) != OK)
         error("ERROR: Failed to allocate enough memory from heap.");
-    if (linkedlist_new(&paths) != OK)
+    if (queue_new(&paths) != OK)
         error("ERROR: Failed to allocate enough memory from heap.");
 
     /* Adds each of the specified search directories into the list */
@@ -97,7 +102,7 @@ int main(int argc, char **argv) {
         if ((path = strdup("./")) == NULL) {
             error("ERROR: Failed to allocate enough memory from heap.");
         }
-        if (linkedlist_addLast(paths, path) != OK) {
+        if (queue_add(paths, path) != OK) {
             free(path);
             error("ERROR: Failed to allocate enough memory from heap.");
         }
@@ -108,7 +113,7 @@ int main(int argc, char **argv) {
             if ((path = strdup(args->searchPaths[i])) == NULL) {
                 error("ERROR: Failed to allocate enough memory from heap.");
             }
-            if (linkedlist_addLast(paths, path) != OK) {
+            if (queue_add(paths, path) != OK) {
                 free(path);
                 error("ERROR: Failed to allocate enough memory from heap.");
             }
@@ -125,37 +130,47 @@ int main(int argc, char **argv) {
         closedir(dir);
     }*/
 
-    /* Add each specified search path into the list */
+    /*
+    while paths list os not empty:
+      pop path from list
+      open the path
+      if path cannot be opened:
+        print error and continue
+      for each F in path:
+        if F is a file:
+          test F against regex
+          if F is a match:
+            add F to results
+          else:
+            add F to list of paths
+ */
 
+    char *currPath;
+    DIR *currDir;
+    struct dirent *dent;
 
-    fprintf(stdout, "all=%d,\n\
-            conflict=%d\n\
-            checkFolders=%d\n\
-            ignoreCase=%d\n\
-            humanReadable=%d\n\
-            listFormat=%d\n\
-            quiet=%d\n\
-            reverse=%d\n\
-            regex=%s\n\
-            maxDepth=%d\n\
-            nThreads=%d\n\
-            maxResults=%ld\n",
-            args->all,
-            args->conflict,
-            args->checkFolders,
-            args->ignoreCase,
-            args->humanReadable,
-            args->listFormat,
-            args->quiet,
-            args->reverse,
-            args->regex,
-            args->maxDepth,
-            args->nThreads,
-            args->maxResults);
-    int i;
-    for (i = 0; i < args->nPaths; i++) {
-        printf("%s\n", args->searchPaths[i]);
+    while (queue_isEmpty(paths) == FALSE) {
+
+        (void)queue_poll(paths, (void **)&currPath);
+        if ((currDir = opendir(currPath)) == NULL) {
+            fprintf(stderr, "ERROR: Failed to open the directory - %s\n", currPath);
+            continue;
+        }
+
+        while ((dent = readdir(currDir)) != NULL) {
+
+            if (strcmp(dent->d_name, ".") == 0 || strcmp(dent->d_name, "..") == 0)
+                continue;
+            /*
+             * check dent->d_name against regex
+             * if is a match:
+             *   add currPath + dent->d_name to results
+             *
+             */
+            fprintf(stdout, "%s%s\n", currPath, dent->d_name);
+        }
     }
+
     cleanUp();
 
     return 0;
