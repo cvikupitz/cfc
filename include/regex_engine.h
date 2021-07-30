@@ -92,7 +92,7 @@ int regex_engine_execute(RegexEngine *regex, const char *str);
  * Returns:
  *
  */
-int regex_engine_getMatches(RegexEngine *regex, RegexMatch *matches, int *len);
+int regex_engine_getMatches(RegexEngine *regex, RegexMatch **matches, int *len);
 
 /**
  * FIXME

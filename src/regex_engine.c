@@ -126,11 +126,11 @@ int regex_engine_execute(RegexEngine *regex, const char *str) {
     return status;
 }
 
-int regex_engine_getMatches(RegexEngine *regex, RegexMatch *matches, int *len) {
+int regex_engine_getMatches(RegexEngine *regex, RegexMatch **matches, int *len) {
 
     int status = NO_MATCH;
     if (!regex->execStatus || regex->len == 0) {
-        matches = regex->matches;
+        *matches = regex->matches;
         *len = regex->len;
         status = 0;
     }
