@@ -108,24 +108,24 @@ static int parse_options(int key, char *arg, struct argp_state *state) {
 
     switch (key) {
         case 'a':
-            prog_args->progFlags |= SHOW_ALL;
+            prog_args->progFlags |= (1 << SHOW_ALL);
             break;
         case 'c':
-            prog_args->progFlags |= CONFLICT;
+            prog_args->progFlags |= (1 << CONFLICT);
             break;
         case 'D':
             {
                 char *after;
                 int temp = strtol(arg, &after, 10);
-                if (temp <= 0) {
-                    argp_failure(state, 1, 0, "invalid max depth - must be an int greater than 0.");
+                if (temp < 0) {
+                    argp_failure(state, 1, 0, "invalid max depth - must be an int greater than or equal to 0.");
                 } else {
                     prog_args->maxDepth = temp;
                 }
                 break;
             }
         case 'F':
-            prog_args->progFlags |= CHECK_FOLDERS;
+            prog_args->progFlags |= (1 << CHECK_FOLDERS);
             break;
         case 'I':
             {
@@ -138,7 +138,7 @@ static int parse_options(int key, char *arg, struct argp_state *state) {
                 break;
             }
         case 'i':
-            prog_args->progFlags |= IGNORE_CASE;
+            prog_args->progFlags |= (1 << IGNORE_CASE);
             break;
         case 'X':
             {
@@ -152,10 +152,10 @@ static int parse_options(int key, char *arg, struct argp_state *state) {
                 break;
             }
         case 'h':
-            prog_args->progFlags |= HUMAN_READABLE;
+            prog_args->progFlags |= (1 << HUMAN_READABLE);
             break;
         case 'l':
-            prog_args->progFlags |= LIST_FORMAT;
+            prog_args->progFlags |= (1 << LIST_FORMAT);
             break;
         case 'M':
             {
@@ -169,10 +169,10 @@ static int parse_options(int key, char *arg, struct argp_state *state) {
                 break;
             }
         case 'q':
-            prog_args->progFlags |= QUIET;
+            prog_args->progFlags |= (1 << QUIET);
             break;
         case 'r':
-            prog_args->progFlags |= REVERSE;
+            prog_args->progFlags |= (1 << REVERSE);
             break;
         case ARGP_KEY_ARG:
             {
