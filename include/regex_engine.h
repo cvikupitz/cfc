@@ -25,6 +25,11 @@
 #ifndef _REGEX_ENGINE_H__
 #define _REGEX_ENGINE_H__
 
+#define CMP_FAIL 1
+#define NO_CMP   2
+#define NO_MATCH 3
+#define NO_ERROR 4
+
 /**
  * Interface for the Regex engine ADT.
  */
@@ -47,7 +52,7 @@ typedef struct {
  * Returns:
  *    A RegexEngine* to the new instance, or NULL if allocation failed.
  */
-RegexEngine *regex_engine_new(void);
+RegexEngine *regex_engine_new(int max);
 
 /**
  * FIXME
@@ -87,7 +92,7 @@ int regex_engine_execute(RegexEngine *regex, const char *str);
  * Returns:
  *
  */
-int regex_engine_getMatches(RegexEngine *regex, RegexMatch **matches, int size);
+int regex_engine_getMatches(RegexEngine *regex, RegexMatch *matches, int *len);
 
 /**
  * FIXME
@@ -99,7 +104,7 @@ int regex_engine_getMatches(RegexEngine *regex, RegexMatch **matches, int size);
  * Returns:
  *    0 if successful (the last error was loaded), 1 if not. FIXME
  */
-int regex_engine_error(RegexEngine *regex, char[] buffer, int size);
+int regex_engine_error(RegexEngine *regex, char buffer[], size_t size);
 
 /**
  * Destroys the specified RegexEngine by returning its allocated heap memory.
