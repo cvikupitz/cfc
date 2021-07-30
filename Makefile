@@ -18,7 +18,7 @@ COMPILE=$(CC) $(CFLAGS) $(IFLAGS) -c -o $@ $^
 LINK=$(CC) $(CFLAGS) -o $@ $^
 
 $(SRC)/driver: $(SRC)/driver.o $(SRC)/arg_parser.o $(SRC)/queue.o $(SRC)/treeset.o \
-        $(SRC)/iterator.o $(SRC)/file_utils.o
+        $(SRC)/iterator.o $(SRC)/file_utils.o $(SRC)/regex_engine.o
 	$(LINK)
 
 $(SRC)/%.o: $(SRC)/%.c

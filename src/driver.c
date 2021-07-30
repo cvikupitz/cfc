@@ -23,14 +23,18 @@
  */
 
 #include <dirent.h>
+#include <regex.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "arg_parser.h"
 #include "queue.h"
+#include "regex_engine.h"
 #include "treeset.h"
 
 static ProgArgs *args = NULL;
+static RegexEngine *regex = NULL;
 static TreeSet *results = NULL;
 static Queue *paths = NULL;
 
@@ -60,20 +64,21 @@ static void cleanUp(void) {
         treeset_destroy(results, free);
     if (paths != NULL)
         queue_destroy(paths, free);
+    if (regex != NULL)
+        destroy_regex_engine(regex);
 }
 
 /*
  * Prints the specified error message then exits with a non-success code.
  */
-static void error(const char *msg) {
-    fprintf(stderr, "%s\n", msg);
+static void error(const char *format, ...) {
+
+    va_list args;
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    fprintf(stdout, "\n");
     cleanUp();
     exit(1);
-}
-
-static void printArgs(char *name, int pos, unsigned int flags) {
-    int state = ((flags & (pos << 1)) ? 1 : 0);
-    fprintf(stdout, "%s=%d\n", name, state);
 }
 
 /*
@@ -81,6 +86,7 @@ static void printArgs(char *name, int pos, unsigned int flags) {
  */
 int main(int argc, char **argv) {
 
+    char buffer[BUFFER_SIZE];
     char *path;
     int (*comparator)(void *, void *);
     int status;
@@ -90,11 +96,17 @@ int main(int argc, char **argv) {
         return status;
 
     /* Instantiate the necessary ADTs */
-    comparator = str_comparison;//(args->reverse == 0) ? str_comparison : str_comparison_reverse;//FIXME
+    comparator = (!GET_BIT(args->progFlags, REVERSE)) ? str_comparison : str_comparison_reverse;
     if (treeset_new(&results, comparator) != OK)
         error("ERROR: Failed to allocate enough memory from heap.");
     if (queue_new(&paths) != OK)
         error("ERROR: Failed to allocate enough memory from heap.");
+    if ((regex = regex_engine_new(1)) == NULL)
+        error("ERROR: Failed to allocate enough memory from heap.");
+    if (regex_engine_compile_pattern(regex, args->regex, REG_EXTENDED|REG_NEWLINE)) {
+        (void)regex_engine_error(regex, buffer, sizeof(buffer));
+        error("ERROR: Failed to compile the pattern '%s' - %s", args->regex, buffer);
+    }
 
     /* Adds each of the specified search directories into the list */
     if (args->nPaths == 0) {
@@ -119,16 +131,6 @@ int main(int argc, char **argv) {
             }
         }
     }
-
-    /*int i;
-    for (i = 0; i < args->nPaths; i++) {
-        struct dirent *pDir;
-        DIR *dir = opendir(args->searchPaths[i]);
-        while ((pDir = readdir(dir)) != NULL) {
-            printf("[%s]\n", pDir->d_name);
-        }
-        closedir(dir);
-    }*/
 
     /*
     while paths list os not empty:
@@ -159,17 +161,66 @@ int main(int argc, char **argv) {
 
         while ((dent = readdir(currDir)) != NULL) {
 
+            /* Ignore current working directory and parent directory */
             if (strcmp(dent->d_name, ".") == 0 || strcmp(dent->d_name, "..") == 0)
                 continue;
+            /* Ignore files & directories starting with '.' */
+            if (strncmp(dent->d_name, ".", 1) == 0)
+                continue;
+
+            /* If entry is a directory, add it to list of paths to search */
+            if (dent->d_type == DT_DIR) {
+
+                sprintf(buffer, "%s%s/", currPath, dent->d_name);
+                char *newPath = strdup(buffer);
+                if (newPath != NULL) {
+                    if (queue_add(paths, newPath) != OK)
+                        free(newPath);
+                }
+
+            } else if (dent->d_type == DT_REG) {
+
+                if (regex_engine_isMatch(regex, dent->d_name)) {
+                    sprintf(buffer, "%s%s", currPath, dent->d_name);
+                    char *result = strdup(buffer);
+                    if (result != NULL) {
+                        if (treeset_add(results, result) != OK)
+                            free(result);
+                    }
+                }
+            } else {
+                /*
+                 * Ignore all other types of entries
+                 */
+                continue;
+            }
+
             /*
              * check dent->d_name against regex
              * if is a match:
              *   add currPath + dent->d_name to results
              *
              */
-            fprintf(stdout, "%s%s\n", currPath, dent->d_name);
+
+        }
+
+        free(currPath);
+        closedir(currDir);
+    }
+
+    Array *matches;
+    long i, mx = args->maxResults;
+    treeset_toArray(results, &matches);
+
+    if (!GET_BIT(args->progFlags, QUIET)) {
+        for (i = 0; i < matches->len; i++, mx--) {
+            if (mx == 0)
+                break;
+            fprintf(stdout, "%s\n", (char *)matches->items[i]);
         }
     }
+    fprintf(stdout, "\nFound %ld match(es)\n", matches->len);
+    FREE_ARRAY(matches);
 
     cleanUp();
 

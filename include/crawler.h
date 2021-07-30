@@ -22,4 +22,9 @@
  * SOFTWARE.
  */
 
+typedef struct directory {
+    char *path;
+    int depth;
+} Directory;
+
 void display_results(long maxResults);
