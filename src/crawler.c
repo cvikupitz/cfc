@@ -22,7 +22,32 @@
  * SOFTWARE.
  */
 
-void display_results(long max) {
+#include <stdio.h>
+#include "arg_parser.h"
+#include "crawler.h"
 
+void display_results(TreeSet *results, long max, int flags) {
 
+    Iterator *iter = NULL;
+    long matches = treeset_size(results);
+    char *entry;
+
+    if (!GET_BIT(flags, QUIET) && treeset_isEmpty(results) == FALSE) {
+
+        if (treeset_iterator(results, &iter) != OK) {
+            fprintf(stderr, "ERROR: Failed to create the iterator for the results.\n");
+            return;
+        }
+
+        while (iterator_hasNext(iter) == TRUE) {
+            (void)iterator_next(iter, (void **)&entry);
+            fprintf(stdout, "%s\n", entry);
+            if ((--max) == 0)
+                break;
+        }
+
+        iterator_destroy(iter);
+    }
+
+    fprintf(stdout, "\nFound %ld match(es)\n", matches);
 }

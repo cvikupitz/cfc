@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "arg_parser.h"
+#include "crawler.h"
 #include "queue.h"
 #include "regex_engine.h"
 #include "treeset.h"
@@ -103,7 +104,10 @@ int main(int argc, char **argv) {
         error("ERROR: Failed to allocate enough memory from heap.");
     if ((regex = regex_engine_new(1)) == NULL)
         error("ERROR: Failed to allocate enough memory from heap.");
-    if (regex_engine_compile_pattern(regex, args->regex, REG_EXTENDED|REG_NEWLINE)) {
+    status = (!GET_BIT(args->progFlags, IGNORE_CASE)) ?
+        regex_engine_compile_pattern(regex, args->regex, REG_EXTENDED|REG_NEWLINE) :
+        regex_engine_compile_pattern(regex, args->regex, REG_EXTENDED|REG_NEWLINE|REG_ICASE);
+    if (status) {
         (void)regex_engine_error(regex, buffer, sizeof(buffer));
         error("ERROR: Failed to compile the pattern '%s' - %s", args->regex, buffer);
     }
@@ -201,27 +205,13 @@ int main(int argc, char **argv) {
              *   add currPath + dent->d_name to results
              *
              */
-
         }
 
         free(currPath);
         closedir(currDir);
     }
 
-    Array *matches;
-    long i, mx = args->maxResults;
-    treeset_toArray(results, &matches);
-
-    if (!GET_BIT(args->progFlags, QUIET)) {
-        for (i = 0; i < matches->len; i++, mx--) {
-            if (mx == 0)
-                break;
-            fprintf(stdout, "%s\n", (char *)matches->items[i]);
-        }
-    }
-    fprintf(stdout, "\nFound %ld match(es)\n", matches->len);
-    FREE_ARRAY(matches);
-
+    display_results(results, args->maxResults, args->progFlags);
     cleanUp();
 
     return 0;

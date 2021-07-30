@@ -160,7 +160,7 @@ static int parse_options(int key, char *arg, struct argp_state *state) {
         case 'M':
             {
                 char *after;
-                int temp = strtol(arg, &after, 10);
+                long temp = strtol(arg, &after, 10);
                 if (temp <= 0) {
                     argp_failure(state, 1, 0, "invalid max results - must be an int greater than 0.");
                 } else {
@@ -221,7 +221,7 @@ int prog_args_parse(int argc, char **argv, ProgArgs **progArgs) {
     } else {
         prog_args->nPaths = 0;
         prog_args->maxDepth = -1;
-        prog_args->maxResults = -1;
+        prog_args->maxResults = 0;
         prog_args->nThreads = 1;
         prog_args->progFlags = 0;
     }

@@ -22,9 +22,11 @@
  * SOFTWARE.
  */
 
+#include "treeset.h"
+
 typedef struct directory {
     char *path;
     int depth;
 } Directory;
 
-void display_results(long maxResults);
+void display_results(TreeSet *results, long max, int flags);
