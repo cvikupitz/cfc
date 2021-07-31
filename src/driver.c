@@ -31,11 +31,11 @@
 #include "crawler.h"
 #include "queue.h"
 #include "regex_engine.h"
-#include "treeset.h"
+#include "ts_treeset.h"
 
 static ProgArgs *args = NULL;
 static RegexEngine *regex = NULL;
-static TreeSet *results = NULL;
+static ConcurrentTreeSet *results = NULL;
 static Queue *paths = NULL;
 
 /*
@@ -61,7 +61,7 @@ static void cleanUp(void) {
     if (args != NULL)
         free(args);
     if (results != NULL)
-        treeset_destroy(results, free);
+        ts_treeset_destroy(results, free);
     if (paths != NULL)
         queue_destroy(paths, (void *)crawler_dir_free);
     if (regex != NULL)
@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
 
     /* Instantiate the necessary ADTs */
     comparator = (!GET_BIT(args->progFlags, REVERSE)) ? str_comparison : str_comparison_reverse;
-    if (treeset_new(&results, comparator) != OK)
+    if (ts_treeset_new(&results, comparator) != OK)
         error(2, "ERROR: Failed to allocate enough memory from heap.");
     if (queue_new(&paths) != OK)
         error(2, "ERROR: Failed to allocate enough memory from heap.");

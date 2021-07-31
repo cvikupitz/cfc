@@ -4,6 +4,7 @@
 ##############################################
 
 ##### Directories for header, source, and test files
+BIN=./bin
 INCLUDE=./include
 SRC=./src
 TEST=./test
@@ -12,13 +13,13 @@ TEST=./test
 CC=gcc
 CFLAGS=-W -Wall -Wextra -g
 IFLAGS=-I$(INCLUDE)
-#LIBS=-lm -lpthread
-#LFLAGS=-L. -lcds -lcunit $(LIBS)
+LIBS=-lpthread
 COMPILE=$(CC) $(CFLAGS) $(IFLAGS) -c -o $@ $^
-LINK=$(CC) $(CFLAGS) -o $@ $^
+LINK=$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 $(SRC)/driver: $(SRC)/driver.o $(SRC)/arg_parser.o $(SRC)/queue.o $(SRC)/treeset.o \
-        $(SRC)/iterator.o $(SRC)/file_utils.o $(SRC)/regex_engine.o $(SRC)/crawler.o
+        $(SRC)/iterator.o $(SRC)/file_utils.o $(SRC)/regex_engine.o $(SRC)/crawler.o \
+        $(SRC)/ts_iterator.o $(SRC)/ts_treeset.o
 	$(LINK)
 
 $(SRC)/%.o: $(SRC)/%.c

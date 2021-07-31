@@ -54,7 +54,7 @@ void crawler_dir_free(CrDir *dir) {
     }
 }
 
-void process(RegexEngine *regex, TreeSet *results, Queue *paths, ProgArgs *args) {
+void process(RegexEngine *regex, ConcurrentTreeSet *results, Queue *paths, ProgArgs *args) {
 
     char buffer[BUFFER_SIZE];
     int depth;
@@ -101,7 +101,7 @@ void process(RegexEngine *regex, TreeSet *results, Queue *paths, ProgArgs *args)
                         sprintf(buffer, "%s%s", crDir->path, dent->d_name);
                         char *result = strdup(buffer);
                         if (result != NULL) {
-                            if (treeset_add(results, result) != OK)
+                            if (ts_treeset_add(results, result) != OK)
                                 free(result);
                         }
                     }
@@ -113,7 +113,7 @@ void process(RegexEngine *regex, TreeSet *results, Queue *paths, ProgArgs *args)
                     sprintf(buffer, "%s%s", crDir->path, dent->d_name);
                     char *result = strdup(buffer);
                     if (result != NULL) {
-                        if (treeset_add(results, result) != OK)
+                        if (ts_treeset_add(results, result) != OK)
                             free(result);
                     }
                 }
@@ -130,17 +130,17 @@ void process(RegexEngine *regex, TreeSet *results, Queue *paths, ProgArgs *args)
     }
 }
 
-void display_results(TreeSet *results, long max, int flags) {
+void display_results(ConcurrentTreeSet *results, long max, int flags) {
 
-    Iterator *iter = NULL;
-    long matches = treeset_size(results);
+    ConcurrentIterator *iter = NULL;
+    long matches = ts_treeset_size(results);
     char *entry;
 
     /*
      * If there are no matches found, simply print the appropriate message
      * and return from method.
      */
-    if (treeset_isEmpty(results) == TRUE) {
+    if (ts_treeset_isEmpty(results) == TRUE) {
         fprintf(stdout, "\nNo matches found\n");
         return;
     }
@@ -152,15 +152,15 @@ void display_results(TreeSet *results, long max, int flags) {
     if (!GET_BIT(flags, QUIET)) {
 
         /* Create the iterator of results */
-        if (treeset_iterator(results, &iter) != OK) {
+        if (ts_treeset_iterator(results, &iter) != OK) {
             fprintf(stderr, "ERROR: Failed to create the iterator for the results.\n");
             return;
         }
 
         /* Iterate through each element, print out the file path */
-        while (iterator_hasNext(iter) == TRUE) {
+        while (ts_iterator_hasNext(iter) == TRUE) {
 
-            (void)iterator_next(iter, (void **)&entry);
+            (void)ts_iterator_next(iter, (void **)&entry);
             fprintf(stdout, "%s\n", entry);
             /*
              * If the max flag is specified, we will stop printing results after the
@@ -171,7 +171,7 @@ void display_results(TreeSet *results, long max, int flags) {
                 break;
         }
 
-        iterator_destroy(iter);
+        ts_iterator_destroy(iter);
     }
 
     fprintf(stdout, "\nFound %ld match(es)\n", matches);

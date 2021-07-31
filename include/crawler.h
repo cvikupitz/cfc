@@ -28,7 +28,7 @@
 #include "arg_parser.h"
 #include "queue.h"
 #include "regex_engine.h"
-#include "treeset.h"
+#include "ts_treeset.h"
 
 /**
  * Structure to represent a directory to search as part of the file crawler.
@@ -72,7 +72,7 @@ void crawler_dir_free(CrDir *dir);
  * Returns:
  *    None
  */
-void process(RegexEngine *regex, TreeSet *results, Queue *paths, ProgArgs *args);
+void process(RegexEngine *regex, ConcurrentTreeSet *results, Queue *paths, ProgArgs *args);
 
 /**
  * Displays all matched results contained in 'results'.
@@ -84,6 +84,6 @@ void process(RegexEngine *regex, TreeSet *results, Queue *paths, ProgArgs *args)
  * Returns:
  *    None
  */
-void display_results(TreeSet *results, long max, int flags);
+void display_results(ConcurrentTreeSet *results, long max, int flags);
 
 #endif  /* _FILE_CRAWLER_H__ */
