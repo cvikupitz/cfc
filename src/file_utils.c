@@ -56,9 +56,3 @@ char *file_path_deduct(char path[], char sep) {
 
     return path;
 }
-
-#define UNUSED __attribute__((unused))
-char *file_size_readable_format(UNUSED unsigned long size, UNUSED char dest[]) {
-
-    return "";
-}

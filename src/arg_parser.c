@@ -104,6 +104,7 @@ static void convert_to_bash(char *regex, char dest[]) {
  */
 static int parse_options(int key, char *arg, struct argp_state *state) {
 
+    char *after;
     int *arg_count = state->input;
 
     switch (key) {
@@ -115,10 +116,9 @@ static int parse_options(int key, char *arg, struct argp_state *state) {
             break;
         case 'D':
             {
-                char *after;
                 int temp = strtol(arg, &after, 10);
                 if (temp < 0) {
-                    argp_failure(state, 1, 0, "invalid max depth - must be an int greater than or equal to 0.");
+                    argp_failure(state, 1, 0, "invalid max depth: %s - must be an int greater than or equal to 0.", arg);
                 } else {
                     prog_args->maxDepth = temp;
                 }
@@ -142,27 +142,19 @@ static int parse_options(int key, char *arg, struct argp_state *state) {
             break;
         case 'X':
             {
-                char *after;
                 int temp = strtol(arg, &after, 10);
                 if (temp <= 0) {
-                    argp_failure(state, 1, 0, "invalid thread count - must be an int greater than 0.");
+                    argp_failure(state, 1, 0, "invalid thread count: %s - must be an int greater than 0.", arg);
                 } else {
                     prog_args->nThreads = temp;
                 }
                 break;
             }
-        case 'h':
-            prog_args->progFlags |= (1 << HUMAN_READABLE);
-            break;
-        case 'l':
-            prog_args->progFlags |= (1 << LIST_FORMAT);
-            break;
         case 'M':
             {
-                char *after;
                 long temp = strtol(arg, &after, 10);
                 if (temp <= 0) {
-                    argp_failure(state, 1, 0, "invalid max results - must be an int greater than 0.");
+                    argp_failure(state, 1, 0, "invalid max results: %s - must be an int greater than 0.", arg);
                 } else {
                     prog_args->maxResults = temp;
                 }
@@ -183,8 +175,9 @@ static int parse_options(int key, char *arg, struct argp_state *state) {
                 break;
             }
         case ARGP_KEY_END:
-            if ((*arg_count) > 0)
+            if ((*arg_count) > 0) {
                 argp_failure(state, 1, 0, "Pattern 'REGEX' is undefined, please specify the pattern for matching.");
+            }
             break;
     }
     return 0;
@@ -199,10 +192,8 @@ static struct argp_option options[] = {
     {"check-folders", 'F', 0, 0, "Includes folders in the search", 0},
     {"include", 'I', "DIR", 0, "Adds DIR to the search path", 0},
     {"ignore-case", 'i', 0, 0, "Performs a case-insensitive search", 0},
-    {"threads", 'X', "N", 0, "Performs the search with N number of PThreads", 0},
+    {"threads", 'X', "N", 0, "Performs the search with N number of PThreads (to be implemented in future version)", 0},
     {0, 0, 0, 0, "Output Options", 2},
-    {"human-readable", 'h', 0, 0, "When using the list format, print human readable sizes (e.g. 16K, 8M, 4G)", 0},
-    {"list", 'l', 0, 0, "Uses a long list format", 0},
     {"max-results", 'M', "N", 0, "Display no more than N results", 0},
     {"quiet", 'q', 0, 0, "Prints only the number of matches, not the matches themselves", 0},
     {"reverse", 'r', 0, 0, "Reverses the sorting when displaying the matches", 0},
