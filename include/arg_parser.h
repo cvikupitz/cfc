@@ -36,11 +36,9 @@ typedef enum prog_flags {
     SHOW_ALL            = 0,    /* Flag to enable checks for entries starting with '.' */
     CONFLICT            = 1,    /* Flag to enable opposite search */
     CHECK_FOLDERS       = 2,    /* Flag to include folders in search */
-    HUMAN_READABLE      = 3,    /* Flag to enable human-readable file sizes */
-    IGNORE_CASE         = 4,    /* Flag to enable case-insensitive searches */
-    LIST_FORMAT         = 5,    /* Flag to enable the listing format (similar to ls -l) */
-    QUIET               = 6,    /* Flag to disable all logs and results */
-    REVERSE             = 7     /* Flag to enable reverse ordering when displaying results */
+    IGNORE_CASE         = 3,    /* Flag to enable case-insensitive searches */
+    QUIET               = 4,    /* Flag to disable all logs and results */
+    REVERSE             = 5     /* Flag to enable reverse ordering when displaying results */
 } ProgFlags;
 
 /**
