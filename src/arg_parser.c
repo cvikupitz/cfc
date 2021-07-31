@@ -57,7 +57,13 @@ Examples:\n\
   '[0-9]+' matches '0', '001', and '99', but not\n\
       '1A', 'A1', or 'TEST'.\n\
   '[^0-9]+' matches 'TEST', '(A)', and ' -B', but not\n\
-      'A1', '100', or 'TEST__9'.\n";
+      'A1', '100', or 'TEST__9'.\v\
+All results and other informational output will be printed to standard output, and all error messages (e.g., directory fails to open) will be \
+printed to standard error.\n\n\
+Exit Status:\n\
+  0 if successful\n\
+  1 for minor issues (e.g., argument(s) parsed were invalid)\n\
+  2 for major issues (e.g., dynamic memory allocation failed)\n";
 
 /*
  * Converts a bash pattern to a regex to be compiled. Stores the result into 'dest'.

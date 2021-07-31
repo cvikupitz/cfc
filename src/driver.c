@@ -22,7 +22,6 @@
  * SOFTWARE.
  */
 
-#include <dirent.h>
 #include <regex.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -48,7 +47,7 @@ static int str_comparison(void *s1, void *s2) {
 }
 
 /*
- * Inverse function to strcmp(char *, char *); used for reverse ordering when the program
+ * Inverse function to strcmp(char *, char *); used for reverse ordering when the reverse
  * flag is specified.
  */
 static int str_comparison_reverse(void *s1, void *s2) {
@@ -64,7 +63,7 @@ static void cleanUp(void) {
     if (results != NULL)
         treeset_destroy(results, free);
     if (paths != NULL)
-        queue_destroy(paths, free);
+        queue_destroy(paths, (void *)crawler_dir_free);
     if (regex != NULL)
         destroy_regex_engine(regex);
 }
@@ -72,14 +71,14 @@ static void cleanUp(void) {
 /*
  * Prints the specified error message then exits with a non-success code.
  */
-static void error(const char *format, ...) {
+static void error(int status, const char *format, ...) {
 
     va_list args;
     va_start(args, format);
     vfprintf(stderr, format, args);
     fprintf(stdout, "\n");
     cleanUp();
-    exit(1);
+    exit(status);
 }
 
 /*
@@ -87,10 +86,10 @@ static void error(const char *format, ...) {
  */
 int main(int argc, char **argv) {
 
+    CrDir *dir;
     char buffer[BUFFER_SIZE];
-    char *path;
     int (*comparator)(void *, void *);
-    int status;
+    int status, cflags;
 
     /* Parse command line arguments */
     if ((status = prog_args_parse(argc, argv, &args)) != 0)
@@ -99,121 +98,49 @@ int main(int argc, char **argv) {
     /* Instantiate the necessary ADTs */
     comparator = (!GET_BIT(args->progFlags, REVERSE)) ? str_comparison : str_comparison_reverse;
     if (treeset_new(&results, comparator) != OK)
-        error("ERROR: Failed to allocate enough memory from heap.");
+        error(2, "ERROR: Failed to allocate enough memory from heap.");
     if (queue_new(&paths) != OK)
-        error("ERROR: Failed to allocate enough memory from heap.");
+        error(2, "ERROR: Failed to allocate enough memory from heap.");
     if ((regex = regex_engine_new(1)) == NULL)
-        error("ERROR: Failed to allocate enough memory from heap.");
-    status = (!GET_BIT(args->progFlags, IGNORE_CASE)) ?
-        regex_engine_compile_pattern(regex, args->regex, REG_EXTENDED|REG_NEWLINE) :
-        regex_engine_compile_pattern(regex, args->regex, REG_EXTENDED|REG_NEWLINE|REG_ICASE);
+        error(2, "ERROR: Failed to allocate enough memory from heap.");
+    cflags = (!GET_BIT(args->progFlags, IGNORE_CASE)) ? REG_EXTENDED|REG_NEWLINE : REG_EXTENDED|REG_NEWLINE|REG_ICASE;
+    status = regex_engine_compile_pattern(regex, args->regex, cflags);
     if (status) {
         (void)regex_engine_error(regex, buffer, sizeof(buffer));
-        error("ERROR: Failed to compile the pattern '%s' - %s", args->regex, buffer);
+        error(2, "ERROR: Failed to compile the pattern '%s' - %s", args->regex, buffer);
     }
 
     /* Adds each of the specified search directories into the list */
     if (args->nPaths == 0) {
         /* If user has not specified any paths, add current working directory */
-        if ((path = strdup("./")) == NULL) {
-            error("ERROR: Failed to allocate enough memory from heap.");
+        if ((dir = crawler_dir_malloc("./", args->maxDepth)) == NULL) {
+            error(2, "ERROR: Failed to allocate enough memory from heap.");
         }
-        if (queue_add(paths, path) != OK) {
-            free(path);
-            error("ERROR: Failed to allocate enough memory from heap.");
+        if (queue_add(paths, dir) != OK) {
+            crawler_dir_free(dir);
+            error(2, "ERROR: Failed to allocate enough memory from heap.");
         }
     } else {
         /* Otherwise, add each of the specified paths into the list */
         int i;
         for (i = 0; i < args->nPaths; i++) {
-            if ((path = strdup(args->searchPaths[i])) == NULL) {
-                error("ERROR: Failed to allocate enough memory from heap.");
+            if ((dir = crawler_dir_malloc(args->searchPaths[i], args->maxDepth)) == NULL) {
+                error(2, "ERROR: Failed to allocate enough memory from heap.");
             }
-            if (queue_add(paths, path) != OK) {
-                free(path);
-                error("ERROR: Failed to allocate enough memory from heap.");
+            if (queue_add(paths, dir) != OK) {
+                crawler_dir_free(dir);
+                error(2, "ERROR: Failed to allocate enough memory from heap.");
             }
         }
     }
 
     /*
-    while paths list os not empty:
-      pop path from list
-      open the path
-      if path cannot be opened:
-        print error and continue
-      for each F in path:
-        if F is a file:
-          test F against regex
-          if F is a match:
-            add F to results
-          else:
-            add F to list of paths
- */
-
-    char *currPath;
-    DIR *currDir;
-    struct dirent *dent;
-
-    while (queue_isEmpty(paths) == FALSE) {
-
-        (void)queue_poll(paths, (void **)&currPath);
-        if ((currDir = opendir(currPath)) == NULL) {
-            fprintf(stderr, "ERROR: Failed to open the directory - %s\n", currPath);
-            continue;
-        }
-
-        while ((dent = readdir(currDir)) != NULL) {
-
-            /* Ignore current working directory and parent directory */
-            if (strcmp(dent->d_name, ".") == 0 || strcmp(dent->d_name, "..") == 0)
-                continue;
-            /* Ignore files & directories starting with '.' */
-            if (strncmp(dent->d_name, ".", 1) == 0)
-                continue;
-
-            /* If entry is a directory, add it to list of paths to search */
-            if (dent->d_type == DT_DIR) {
-
-                sprintf(buffer, "%s%s/", currPath, dent->d_name);
-                char *newPath = strdup(buffer);
-                if (newPath != NULL) {
-                    if (queue_add(paths, newPath) != OK)
-                        free(newPath);
-                }
-
-            } else if (dent->d_type == DT_REG) {
-
-                if (regex_engine_isMatch(regex, dent->d_name)) {
-                    sprintf(buffer, "%s%s", currPath, dent->d_name);
-                    char *result = strdup(buffer);
-                    if (result != NULL) {
-                        if (treeset_add(results, result) != OK)
-                            free(result);
-                    }
-                }
-            } else {
-                /*
-                 * Ignore all other types of entries
-                 */
-                continue;
-            }
-
-            /*
-             * check dent->d_name against regex
-             * if is a match:
-             *   add currPath + dent->d_name to results
-             *
-             */
-        }
-
-        free(currPath);
-        closedir(currDir);
-    }
-
+     * Crawls over the files, prints the results, then cleans up all the
+     * heap storage
+     */
+    process(regex, results, paths, args);
     display_results(results, args->maxResults, args->progFlags);
     cleanUp();
 
     return 0;
 }
-
