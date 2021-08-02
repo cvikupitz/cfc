@@ -124,7 +124,7 @@ static int parse_options(int key, char *arg, struct argp_state *state) {
             {
                 int temp = strtol(arg, &after, 10);
                 if (temp < 0) {
-                    argp_failure(state, 1, 0, "invalid max depth: %s - must be an int greater than or equal to 0.", arg);
+                    argp_failure(state, 1, 0, "invalid max depth: '%s' - must be an int greater than or equal to 0.", arg);
                 } else {
                     prog_args->maxDepth = temp;
                 }
@@ -150,7 +150,7 @@ static int parse_options(int key, char *arg, struct argp_state *state) {
             {
                 int temp = strtol(arg, &after, 10);
                 if (temp <= 0) {
-                    argp_failure(state, 1, 0, "invalid thread count: %s - must be an int greater than 0.", arg);
+                    argp_failure(state, 1, 0, "invalid thread count: '%s' - must be an int greater than 0.", arg);
                 } else {
                     prog_args->nThreads = temp;
                 }
@@ -160,7 +160,7 @@ static int parse_options(int key, char *arg, struct argp_state *state) {
             {
                 long temp = strtol(arg, &after, 10);
                 if (temp <= 0) {
-                    argp_failure(state, 1, 0, "invalid max results: %s - must be an int greater than 0.", arg);
+                    argp_failure(state, 1, 0, "invalid max results: '%s' - must be an int greater than 0.", arg);
                 } else {
                     prog_args->maxResults = temp;
                 }
