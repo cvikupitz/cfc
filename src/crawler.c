@@ -28,6 +28,13 @@
 #include <string.h>
 #include "crawler.h"
 
+struct crawler_args_t {
+    RegexEngine *regex;
+    ConcurrentTreeSet *results;
+    WorkQueue *paths;
+    ProgArgs *args;
+};
+
 CrDir *crawler_dir_malloc(char dir[], int depth) {
 
     CrDir *crDir = NULL;
@@ -54,60 +61,39 @@ void crawler_dir_free(CrDir *dir) {
     }
 }
 
-void process(RegexEngine *regex, ConcurrentTreeSet *results, Queue *paths, ProgArgs *args) {
+static void process_directory(DIR *dir, CrDir *crDir, struct crawler_args_t *info) {
 
-    char buffer[BUFFER_SIZE];
-    int depth;
-    CrDir *crDir;
-    DIR *currDir;
+    RegexEngine *regex = info->regex;
+    ConcurrentTreeSet *results = info->results;
+    WorkQueue *paths = info->paths;
+    unsigned int flags = info->args->progFlags;
     struct dirent *dent;
-    unsigned int flags = args->progFlags;
+    char buffer[BUFFER_SIZE];
+    int depth = crDir->depth;
 
-    while (queue_isEmpty(paths) == FALSE) {
+    while ((dent = readdir(dir)) != NULL) {
 
-        (void)queue_poll(paths, (void **)&crDir);
-        depth = crDir->depth;
-        if ((currDir = opendir(crDir->path)) == NULL) {
-            sprintf(buffer, "ERROR: Failed to open directory %s", crDir->path);
-            perror(buffer);
-            crawler_dir_free(crDir);
+        /* Ignore current working directory and parent directory */
+        if (strcmp(dent->d_name, ".") == 0 || strcmp(dent->d_name, "..") == 0)
             continue;
-        }
 
-        while ((dent = readdir(currDir)) != NULL) {
+        /* Ignore files & directories starting with '.' if --all is not specified */
+        if (strncmp(dent->d_name, ".", 1) == 0 && !GET_BIT(flags, SHOW_ALL))
+            continue;
 
-            /* Ignore current working directory and parent directory */
-            if (strcmp(dent->d_name, ".") == 0 || strcmp(dent->d_name, "..") == 0)
-                continue;
-            /* Ignore files & directories starting with '.' if --all is not specified */
-            if (strncmp(dent->d_name, ".", 1) == 0 && !GET_BIT(flags, SHOW_ALL))
-                continue;
+        /* If entry is a directory, add it to list of paths to search */
+        if (dent->d_type == DT_DIR) {
 
-            /* If entry is a directory, add it to list of paths to search */
-            if (dent->d_type == DT_DIR) {
-
-                if (depth != 0) {
-                    sprintf(buffer, "%s%s/", crDir->path, dent->d_name);
-                    CrDir *newDir = crawler_dir_malloc(buffer, depth - 1);
-                    if (newDir != NULL) {
-                        if (queue_add(paths, newDir) != OK)
-                            free(newDir);
-                    }
+            if (depth != 0) {
+                sprintf(buffer, "%s%s/", crDir->path, dent->d_name);
+                CrDir *newDir = crawler_dir_malloc(buffer, (depth - 1));
+                if (newDir != NULL) {
+                    if (work_queue_add(paths, newDir) != OK)
+                        free(newDir);
                 }
+            }
 
-                if (GET_BIT(flags, CHECK_FOLDERS)) {
-
-                    if ((!(GET_BIT(flags, CONFLICT))) == regex_engine_isMatch(regex, dent->d_name)) {
-                        sprintf(buffer, "%s%s", crDir->path, dent->d_name);
-                        char *result = strdup(buffer);
-                        if (result != NULL) {
-                            if (ts_treeset_add(results, result) != OK)
-                                free(result);
-                        }
-                    }
-                }
-
-            } else if (dent->d_type == DT_REG) {
+            if (GET_BIT(flags, CHECK_FOLDERS)) {
 
                 if ((!(GET_BIT(flags, CONFLICT))) == regex_engine_isMatch(regex, dent->d_name)) {
                     sprintf(buffer, "%s%s", crDir->path, dent->d_name);
@@ -117,16 +103,62 @@ void process(RegexEngine *regex, ConcurrentTreeSet *results, Queue *paths, ProgA
                             free(result);
                     }
                 }
-            } else {
-                /*
-                 * Ignore all other types of entries
-                 */
-                continue;
             }
+
+        } else if (dent->d_type == DT_REG) {
+
+            if ((!(GET_BIT(flags, CONFLICT))) == regex_engine_isMatch(regex, dent->d_name)) {
+                sprintf(buffer, "%s%s", crDir->path, dent->d_name);
+                char *result = strdup(buffer);
+                if (result != NULL) {
+                    if (ts_treeset_add(results, result) != OK)
+                        free(result);
+                }
+            }
+        } else {
+            /*
+             * Ignore all other types of entries
+             */
+            continue;
+        }
+    }
+}
+
+static void *process_dirs(void *arg) {
+
+    struct crawler_args_t *args = (struct crawler_args_t *)arg;
+    CrDir *crDir;
+    DIR *dir;
+    char buffer[BUFFER_SIZE];
+
+    while (!work_queue_poll(args->paths, (void **)&crDir)) {
+
+        if ((dir = opendir(crDir->path)) == NULL) {
+            sprintf(buffer, "ERROR: Failed to open directory %s", crDir->path);
+            perror(buffer);
+            crawler_dir_free(crDir);
+            continue;
         }
 
+        process_directory(dir, crDir, args);
         crawler_dir_free(crDir);
-        closedir(currDir);
+        closedir(dir);
+    }
+
+    return NULL;
+}
+
+void process(RegexEngine *regex, ConcurrentTreeSet *results, WorkQueue *paths, ProgArgs *progArgs) {
+
+    struct crawler_args_t args = { regex, results, paths, progArgs };
+    pthread_t threads[progArgs->nThreads];
+    int i;
+
+    for (i = 0; i < progArgs->nThreads; i++) {
+        (void)pthread_create(&(threads[i]), NULL, process_dirs, &args);
+    }
+    for (i = 0; i < progArgs->nThreads; i++) {
+        (void)pthread_join(threads[i], NULL);
     }
 }
 

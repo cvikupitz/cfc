@@ -29,14 +29,14 @@
 #include <string.h>
 #include "arg_parser.h"
 #include "crawler.h"
-#include "queue.h"
 #include "regex_engine.h"
 #include "ts_treeset.h"
+#include "work_queue.h"
 
 static ProgArgs *args = NULL;
 static RegexEngine *regex = NULL;
 static ConcurrentTreeSet *results = NULL;
-static Queue *paths = NULL;
+static WorkQueue *paths = NULL;
 
 /*
  * Similar to strcmp(char *, char *), but parameters are passed as 'void *' to comply
@@ -63,7 +63,7 @@ static void cleanUp(void) {
     if (results != NULL)
         ts_treeset_destroy(results, free);
     if (paths != NULL)
-        queue_destroy(paths, (void *)crawler_dir_free);
+        work_queue_destroy(paths, (void *)crawler_dir_free);
     if (regex != NULL)
         destroy_regex_engine(regex);
 }
@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
     comparator = (!GET_BIT(args->progFlags, REVERSE)) ? str_comparison : str_comparison_reverse;
     if (ts_treeset_new(&results, comparator) != OK)
         error(2, "ERROR: Failed to allocate enough memory from heap.");
-    if (queue_new(&paths) != OK)
+    if (work_queue_new(&paths, args->nThreads) != OK)
         error(2, "ERROR: Failed to allocate enough memory from heap.");
     if ((regex = regex_engine_new(1)) == NULL)
         error(2, "ERROR: Failed to allocate enough memory from heap.");
@@ -116,7 +116,7 @@ int main(int argc, char **argv) {
         if ((dir = crawler_dir_malloc("./", args->maxDepth)) == NULL) {
             error(2, "ERROR: Failed to allocate enough memory from heap.");
         }
-        if (queue_add(paths, dir) != OK) {
+        if (work_queue_add(paths, dir) != 0) {
             crawler_dir_free(dir);
             error(2, "ERROR: Failed to allocate enough memory from heap.");
         }
@@ -127,7 +127,7 @@ int main(int argc, char **argv) {
             if ((dir = crawler_dir_malloc(args->searchPaths[i], args->maxDepth)) == NULL) {
                 error(2, "ERROR: Failed to allocate enough memory from heap.");
             }
-            if (queue_add(paths, dir) != OK) {
+            if (work_queue_add(paths, dir) != 0) {
                 crawler_dir_free(dir);
                 error(2, "ERROR: Failed to allocate enough memory from heap.");
             }
