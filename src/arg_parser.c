@@ -198,7 +198,7 @@ static struct argp_option options[] = {
     {"check-folders", 'F', 0, 0, "Includes folders in the search", 0},
     {"include", 'I', "DIR", 0, "Adds DIR to the search path", 0},
     {"ignore-case", 'i', 0, 0, "Performs a case-insensitive search", 0},
-    {"threads", 'X', "N", 0, "Performs the search with N number of PThreads (to be implemented in future version)", 0},
+    {"threads", 'X', "N", 0, "Performs the search with N number of PThreads", 0},
     {0, 0, 0, 0, "Output Options", 2},
     {"max-results", 'M', "N", 0, "Display no more than N results", 0},
     {"quiet", 'q', 0, 0, "Prints only the number of matches, not the matches themselves", 0},

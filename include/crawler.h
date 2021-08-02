@@ -26,9 +26,9 @@
 #define _FILE_CRAWLER_H__
 
 #include "arg_parser.h"
-#include "queue.h"
 #include "regex_engine.h"
 #include "ts_treeset.h"
+#include "work_queue.h"
 
 /**
  * Structure to represent a directory to search as part of the file crawler.
@@ -68,11 +68,11 @@ void crawler_dir_free(CrDir *dir);
  *    regex - The regex engine that will perform the string comparisons.
  *    results - The set where the results will be stored.
  *    paths - The queue of paths to search in.
- *    args - The program arguments.
+ *    progArgs - The program arguments.
  * Returns:
  *    None
  */
-void process(RegexEngine *regex, ConcurrentTreeSet *results, Queue *paths, ProgArgs *args);
+void process(RegexEngine *regex, ConcurrentTreeSet *results, WorkQueue *paths, ProgArgs *progArgs);
 
 /**
  * Displays all matched results contained in 'results'.
