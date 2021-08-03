@@ -113,7 +113,7 @@ int main(int argc, char **argv) {
     /* Adds each of the specified search directories into the list */
     if (args->nPaths == 0) {
         /* If user has not specified any paths, add current working directory */
-        if ((dir = crawler_dir_malloc("./", args->maxDepth)) == NULL) {
+        if ((dir = crawler_dir_malloc("./", args->maxDepth, args->minDepth)) == NULL) {
             error(2, "ERROR: Failed to allocate enough memory from heap.");
         }
         if (work_queue_add(paths, dir) != 0) {
@@ -124,7 +124,7 @@ int main(int argc, char **argv) {
         /* Otherwise, add each of the specified paths into the list */
         int i;
         for (i = 0; i < args->nPaths; i++) {
-            if ((dir = crawler_dir_malloc(args->searchPaths[i], args->maxDepth)) == NULL) {
+            if ((dir = crawler_dir_malloc(args->searchPaths[i], args->maxDepth, args->minDepth)) == NULL) {
                 error(2, "ERROR: Failed to allocate enough memory from heap.");
             }
             if (work_queue_add(paths, dir) != 0) {

@@ -56,3 +56,9 @@ dkms.conf
 
 # Log Files
 *.log
+
+# Executable
+cfc
+
+# TAR Archives
+*.tgz

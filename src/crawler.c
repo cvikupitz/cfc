@@ -28,6 +28,13 @@
 #include <string.h>
 #include "crawler.h"
 
+#define LOG(str...) if (verbose) fprintf(stderr, str)
+
+/*
+ * A struct that contains all the variables needed to run while processing the file
+ * crawling logic. This single struct is cast as a 'void *' in the argument for the
+ * function called by the PThreads.
+ */
 struct crawler_args_t {
     RegexEngine *regex;
     ConcurrentTreeSet *results;
@@ -35,15 +42,17 @@ struct crawler_args_t {
     ProgArgs *args;
 };
 
-CrDir *crawler_dir_malloc(char dir[], int depth) {
+CrDir *crawler_dir_malloc(char dir[], int maxDepth, int minDepth) {
 
     CrDir *crDir = NULL;
     char *path;
 
     if ((crDir = (CrDir *)malloc(sizeof(CrDir))) != NULL) {
+        /* If allocation is successful, initialize the members */
         if ((path = strdup(dir)) != NULL) {
             crDir->path = path;
-            crDir->depth = depth;
+            crDir->maxDepth = maxDepth;
+            crDir->minDepth = minDepth;
         } else {
             free(crDir);
             crDir = NULL;
@@ -61,6 +70,13 @@ void crawler_dir_free(CrDir *dir) {
     }
 }
 
+/*
+ * Prcoesses all the files currently in the open directory '*dir'.
+ *
+ * Will iterate through all entries in the directory.
+ *   If a directory is found, add it to the work queue
+ *   If a regular file is found, attempt to match against a regex
+ */
 static void process_directory(DIR *dir, CrDir *crDir, struct crawler_args_t *info) {
 
     RegexEngine *regex = info->regex;
@@ -69,7 +85,9 @@ static void process_directory(DIR *dir, CrDir *crDir, struct crawler_args_t *inf
     unsigned int flags = info->args->progFlags;
     struct dirent *dent;
     char buffer[BUFFER_SIZE];
-    int depth = crDir->depth;
+    int maxDepth = crDir->maxDepth;
+    int minDepth = crDir->minDepth;
+    int verbose = !(GET_BIT(flags, NO_WARN));
 
     while ((dent = readdir(dir)) != NULL) {
 
@@ -84,17 +102,24 @@ static void process_directory(DIR *dir, CrDir *crDir, struct crawler_args_t *inf
         /* If entry is a directory, add it to list of paths to search */
         if (dent->d_type == DT_DIR) {
 
-            if (depth != 0) {
+            /* If maximum depth has not been reached, add directory to work queue */
+            if (maxDepth != 0) {
                 sprintf(buffer, "%s%s/", crDir->path, dent->d_name);
-                CrDir *newDir = crawler_dir_malloc(buffer, (depth - 1));
+                CrDir *newDir = crawler_dir_malloc(buffer, (maxDepth - 1), (minDepth - 1));
                 if (newDir != NULL) {
-                    if (work_queue_add(paths, newDir) != OK)
+                    if (work_queue_add(paths, newDir) != OK) {
                         free(newDir);
+                        LOG("Failed to allocate enough memory from the heap, skipping directory: %s", buffer);
+                    }
+                } else {
+                    LOG("Failed to allocate enough memory from the heap, skipping directory: %s", buffer);
                 }
             }
 
-            if (GET_BIT(flags, CHECK_FOLDERS)) {
-
+            /* Checks the directory name against the regex */
+            /* Do so if -F flag is on and minimum depth has been reached */
+            if (GET_BIT(flags, CHECK_FOLDERS) && minDepth > 0) {
+                /* If is a match, add the name to results */
                 if ((!(GET_BIT(flags, CONFLICT))) == regex_engine_isMatch(regex, dent->d_name)) {
                     sprintf(buffer, "%s%s", crDir->path, dent->d_name);
                     char *result = strdup(buffer);
@@ -105,8 +130,16 @@ static void process_directory(DIR *dir, CrDir *crDir, struct crawler_args_t *inf
                 }
             }
 
-        } else if (dent->d_type == DT_REG) {
+        }
 
+        /* If entry is a normal file, check the name against the regex */
+        else if (dent->d_type == DT_REG) {
+
+            /* Skip if the minimum depth has not been reached */
+            if (minDepth > 0)
+                continue;
+
+            /* If is a match, add the file name to results */
             if ((!(GET_BIT(flags, CONFLICT))) == regex_engine_isMatch(regex, dent->d_name)) {
                 sprintf(buffer, "%s%s", crDir->path, dent->d_name);
                 char *result = strdup(buffer);
@@ -124,22 +157,37 @@ static void process_directory(DIR *dir, CrDir *crDir, struct crawler_args_t *inf
     }
 }
 
+/*
+ * Main method that contains the file crawling logic.
+ *
+ * This method is passed to the pthread_create method to kickstart off the
+ * multi-threaded logic.
+ */
 static void *process_dirs(void *arg) {
 
     struct crawler_args_t *args = (struct crawler_args_t *)arg;
+    int verbose = !(GET_BIT(args->args->progFlags, NO_WARN));
     CrDir *crDir;
     DIR *dir;
     char buffer[BUFFER_SIZE];
 
+    /* Keep working while the work queue is not empty */
     while (!work_queue_poll(args->paths, (void **)&crDir)) {
 
+        /*
+         * Attempt to open the directory. If not successful, print the error and
+         * continue on to the next (most likely due to a permissions issue).
+         */
         if ((dir = opendir(crDir->path)) == NULL) {
-            sprintf(buffer, "ERROR: Failed to open directory %s", crDir->path);
-            perror(buffer);
+            if (verbose) {
+                sprintf(buffer, "ERROR: Failed to open directory %s", crDir->path);
+                perror(buffer);
+            }
             crawler_dir_free(crDir);
             continue;
         }
 
+        /* Process the open directory, then clean up the memory */
         process_directory(dir, crDir, args);
         crawler_dir_free(crDir);
         closedir(dir);
@@ -154,6 +202,7 @@ void process(RegexEngine *regex, ConcurrentTreeSet *results, WorkQueue *paths, P
     pthread_t threads[progArgs->nThreads];
     int i;
 
+    /* Creates the threads for kickoff, then wait for all to complete */
     for (i = 0; i < progArgs->nThreads; i++) {
         (void)pthread_create(&(threads[i]), NULL, process_dirs, &args);
     }
