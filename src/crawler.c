@@ -28,6 +28,8 @@
 #include <string.h>
 #include "crawler.h"
 
+#define LOG(str...) if (verbose) fprintf(stderr, str)
+
 /*
  * A struct that contains all the variables needed to run while processing the file
  * crawling logic. This single struct is cast as a 'void *' in the argument for the
@@ -40,7 +42,7 @@ struct crawler_args_t {
     ProgArgs *args;
 };
 
-CrDir *crawler_dir_malloc(char dir[], int depth) {
+CrDir *crawler_dir_malloc(char dir[], int maxDepth, int minDepth) {
 
     CrDir *crDir = NULL;
     char *path;
@@ -49,7 +51,8 @@ CrDir *crawler_dir_malloc(char dir[], int depth) {
         /* If allocation is successful, initialize the members */
         if ((path = strdup(dir)) != NULL) {
             crDir->path = path;
-            crDir->depth = depth;
+            crDir->maxDepth = maxDepth;
+            crDir->minDepth = minDepth;
         } else {
             free(crDir);
             crDir = NULL;
@@ -82,7 +85,9 @@ static void process_directory(DIR *dir, CrDir *crDir, struct crawler_args_t *inf
     unsigned int flags = info->args->progFlags;
     struct dirent *dent;
     char buffer[BUFFER_SIZE];
-    int depth = crDir->depth;
+    int maxDepth = crDir->maxDepth;
+    int minDepth = crDir->minDepth;
+    int verbose = !(GET_BIT(flags, NO_WARN));
 
     while ((dent = readdir(dir)) != NULL) {
 
@@ -97,19 +102,23 @@ static void process_directory(DIR *dir, CrDir *crDir, struct crawler_args_t *inf
         /* If entry is a directory, add it to list of paths to search */
         if (dent->d_type == DT_DIR) {
 
-            /* Only proceed if the max depth specified hasn't been reached */
-            /* Otherwise, add this new directory to the work queue */
-            if (depth != 0) {
+            /* If maximum depth has not been reached, add directory to work queue */
+            if (maxDepth != 0) {
                 sprintf(buffer, "%s%s/", crDir->path, dent->d_name);
-                CrDir *newDir = crawler_dir_malloc(buffer, (depth - 1));
+                CrDir *newDir = crawler_dir_malloc(buffer, (maxDepth - 1), (minDepth - 1));
                 if (newDir != NULL) {
-                    if (work_queue_add(paths, newDir) != OK)
+                    if (work_queue_add(paths, newDir) != OK) {
                         free(newDir);
+                        LOG("Failed to allocate enough memory from the heap, skipping directory: %s", buffer);
+                    }
+                } else {
+                    LOG("Failed to allocate enough memory from the heap, skipping directory: %s", buffer);
                 }
             }
 
-            /* If the -F flag is specified, check the directory name against the regex */
-            if (GET_BIT(flags, CHECK_FOLDERS)) {
+            /* Checks the directory name against the regex */
+            /* Do so if -F flag is on and minimum depth has been reached */
+            if (GET_BIT(flags, CHECK_FOLDERS) && minDepth > 0) {
                 /* If is a match, add the name to results */
                 if ((!(GET_BIT(flags, CONFLICT))) == regex_engine_isMatch(regex, dent->d_name)) {
                     sprintf(buffer, "%s%s", crDir->path, dent->d_name);
@@ -125,6 +134,10 @@ static void process_directory(DIR *dir, CrDir *crDir, struct crawler_args_t *inf
 
         /* If entry is a normal file, check the name against the regex */
         else if (dent->d_type == DT_REG) {
+
+            /* Skip if the minimum depth has not been reached */
+            if (minDepth > 0)
+                continue;
 
             /* If is a match, add the file name to results */
             if ((!(GET_BIT(flags, CONFLICT))) == regex_engine_isMatch(regex, dent->d_name)) {
@@ -153,6 +166,7 @@ static void process_directory(DIR *dir, CrDir *crDir, struct crawler_args_t *inf
 static void *process_dirs(void *arg) {
 
     struct crawler_args_t *args = (struct crawler_args_t *)arg;
+    int verbose = !(GET_BIT(args->args->progFlags, NO_WARN));
     CrDir *crDir;
     DIR *dir;
     char buffer[BUFFER_SIZE];
@@ -165,8 +179,10 @@ static void *process_dirs(void *arg) {
          * continue on to the next (most likely due to a permissions issue).
          */
         if ((dir = opendir(crDir->path)) == NULL) {
-            sprintf(buffer, "ERROR: Failed to open directory %s", crDir->path);
-            perror(buffer);
+            if (verbose) {
+                sprintf(buffer, "ERROR: Failed to open directory %s", crDir->path);
+                perror(buffer);
+            }
             crawler_dir_free(crDir);
             continue;
         }

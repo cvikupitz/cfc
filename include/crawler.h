@@ -35,7 +35,8 @@
  */
 typedef struct crawler_directory {
     char *path;         /* The full directory path */
-    int depth;          /* The max depth in sub-directories to crawl into */
+    int minDepth;       /* The minimum depth to traverse before searching */
+    int maxDepth;       /* The max depth in sub-directories to crawl into */
 } CrDir;
 
 /**
@@ -48,7 +49,7 @@ typedef struct crawler_directory {
  * Returns:
  *    The new CrDir*, or NULL if allocation failed.
  */
-CrDir *crawler_dir_malloc(char dir[], int depth);
+CrDir *crawler_dir_malloc(char dir[], int maxDepth, int minDepth);
 
 /**
  * Destroys the specified CrDir* object by freeing its reserved heap memory.

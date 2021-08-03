@@ -38,7 +38,8 @@ typedef enum prog_flags {
     CHECK_FOLDERS       = 2,    /* Flag to include folders in search */
     IGNORE_CASE         = 3,    /* Flag to enable case-insensitive searches */
     QUIET               = 4,    /* Flag to disable all logs and results */
-    REVERSE             = 5     /* Flag to enable reverse ordering when displaying results */
+    REVERSE             = 5,    /* Flag to enable reverse ordering when displaying results */
+    NO_WARN             = 6     /* Flag to enable warning messages */
 } ProgFlags;
 
 /**
@@ -50,6 +51,7 @@ typedef struct prog_args {
     char searchPaths[MAX_DIRS][BUFFER_SIZE];    /* List of directories to recursively search in */
     int nPaths;                                 /* Number of paths in search paths array */
     int maxDepth;                               /* Max depth for recursive calls to sub-folders */
+    int minDepth;                               /* Min depth to traverse before matching files */
     long maxResults;                            /* The max number of results to display */
     int nThreads;                               /* Number of PThreads to use */
     unsigned int progFlags;                     /* Holds all the boolean-style flags */

@@ -31,7 +31,7 @@
 static ProgArgs *prog_args = NULL;
 
 /* Program version */
-const char *argp_program_version = "cfc 1.0";
+const char *argp_program_version = "cfc 1.1";
 /* Address to send bugs */
 const char *argp_program_bug_address = "https://github.com/cvikupitz/cfc/issues";
 /* Documentation for usage */
@@ -120,16 +120,6 @@ static int parse_options(int key, char *arg, struct argp_state *state) {
         case 'c':
             prog_args->progFlags |= (1 << CONFLICT);
             break;
-        case 'D':
-            {
-                int temp = strtol(arg, &after, 10);
-                if (temp < 0) {
-                    argp_failure(state, 1, 0, "invalid max depth: '%s' - must be an int greater than or equal to 0.", arg);
-                } else {
-                    prog_args->maxDepth = temp;
-                }
-                break;
-            }
         case 'F':
             prog_args->progFlags |= (1 << CHECK_FOLDERS);
             break;
@@ -146,6 +136,26 @@ static int parse_options(int key, char *arg, struct argp_state *state) {
         case 'i':
             prog_args->progFlags |= (1 << IGNORE_CASE);
             break;
+        case 200:
+            {
+                int temp = strtol(arg, &after, 10);
+                if (temp < 0) {
+                    argp_failure(state, 1, 0, "invalid max depth: '%s' - must be an int greater than or equal to 0.", arg);
+                } else {
+                    prog_args->maxDepth = temp;
+                }
+                break;
+            }
+        case 201:
+            {
+                int temp = strtol(arg, &after, 10);
+                if (temp < 0) {
+                    argp_failure(state, 1, 0, "invalid min depth: '%s' - must be an int greater than or equal to 0.", arg);
+                } else {
+                    prog_args->minDepth = temp;
+                }
+                break;
+            }
         case 'X':
             {
                 int temp = strtol(arg, &after, 10);
@@ -172,6 +182,9 @@ static int parse_options(int key, char *arg, struct argp_state *state) {
         case 'r':
             prog_args->progFlags |= (1 << REVERSE);
             break;
+        case 'W':
+            prog_args->progFlags |= (1 << NO_WARN);
+            break;
         case ARGP_KEY_ARG:
             {
                 char buffer[BUFFER_SIZE];
@@ -194,15 +207,17 @@ static struct argp_option options[] = {
     {0, 0, 0, 0, "Search Options", 1},
     {"all", 'a', 0, 0, "Does not ignore entries starting with '.'", 0},
     {"conflict", 'c', 0, 0, "Performs a conflicting search; matches all that do NOT match the specified pattern", 0},
-    {"max-depth", 'D', "N", 0, "Recursively searches no more than N subdirectories for each directory in the search path", 0},
     {"check-folders", 'F', 0, 0, "Includes folders in the search", 0},
     {"include", 'I', "DIR", 0, "Adds DIR to the search path", 0},
     {"ignore-case", 'i', 0, 0, "Performs a case-insensitive search", 0},
+    {"max-depth", 200, "N", 0, "Recursively searches no more than N subdirectories for each directory in the search path", 0},
+    {"min-depth", 201, "N", 0, "Only search for matches that are at within least N subdirectories for each directory in the search path", 0},
     {"threads", 'X', "N", 0, "Performs the search with N number of PThreads", 0},
     {0, 0, 0, 0, "Output Options", 2},
     {"max-results", 'M', "N", 0, "Display no more than N results", 0},
     {"quiet", 'q', 0, 0, "Prints only the number of matches, not the matches themselves", 0},
     {"reverse", 'r', 0, 0, "Reverses the sorting when displaying the matches", 0},
+    {"no-warn", 'W', 0, 0, "Suppresses all error & waring messages during file crawling", 0},
     { 0 }
 };
 
@@ -218,6 +233,7 @@ int prog_args_parse(int argc, char **argv, ProgArgs **progArgs) {
     } else {
         prog_args->nPaths = 0;
         prog_args->maxDepth = -1;
+        prog_args->minDepth = 0;
         prog_args->maxResults = 0;
         prog_args->nThreads = 1;
         prog_args->progFlags = 0;
