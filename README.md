@@ -20,11 +20,11 @@ This application nicknamed ```cfc``` is a more simplified version of the ```find
 
 Searching for Makefiles:
 
-![doc/usage_1.png](https://github.com/cvikupitz/cfc/tree/master/doc/usage_1.png)
+![doc/usage_1.png](https://github.com/cvikupitz/cfc/blob/master/doc/usage_1.png)
 
 Counting C source and header files:
 
-![doc/usage_2.png](https://github.com/cvikupitz/cfc/tree/master/doc/usage_2.png)
+![doc/usage_2.png](https://github.com/cvikupitz/cfc/blob/master/doc/usage_2.png)
 
 ## Setup
 
