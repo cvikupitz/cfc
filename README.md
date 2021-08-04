@@ -4,17 +4,20 @@ Short for 'Concurrent File Crawler' - A crawler that searches a file system for 
 
 ## Table of Contents
 
-* General Info
-* Setup
-* Usage
-* Contributing
-* License
+* [General Info](#general.info)
+* [Setup](#setup)
+* [Usage](#usage)
+  * [About Bash Patterns](#about.bash.patterns)
+  * [Command Line Arguments](#command.line.arguments)
+* [Contributing](#contributing)
+* [License](#license)
 
+<a name="general.info"></a>
 ## General Info
 
 In today's world, computer storage is becoming larger and cheaper. For laptops, storage can vary from several gigabytes to a couple terabytes, and that range can extends much larger for PCs, up to several terabytes of storage. This can make searching and managing older files and directories very difficult. In Linux, there is the ```find``` command that can assist with this, but the program itself is single-threaded and the syntax is cumbersome.
 
-This application nicknamed ```cfc``` is a more simplified version of the ```find``` command. It will crawl through a file system and search for files & directories that match a given bash pattern specified by the user. It is designed to be easier to use and high-performance through concurrency.
+This application nicknamed ```cfc``` is a more simplified version of the ```find``` command. It will crawl through a file system and search for files & directories that match a given bash pattern specified by the user. It is designed to be easier to use and high-performance through PThreads.
 
 **Examples**
 
@@ -26,6 +29,7 @@ Counting C source and header files:
 
 ![doc/usage_2.png](https://github.com/cvikupitz/cfc/blob/master/doc/usage_2.png)
 
+<a name="setup"></a>
 ## Setup
 
 * Clone the repository: 
@@ -34,7 +38,10 @@ Counting C source and header files:
   * ```make clean cfc```
 * Once built, you can run the executable as such:
   * ```./cfc '*.(c|h)' -I/home -X2 -a```
+* Other options can be viewed with the help command:
+  * ```make help```
 
+<a name="usage"></a>
 ## Usage
 
 The file crawler program requires one argument which is the bash pattern to be used for matching files and directories. This is also the only argument that is not preceded by dashes like the command line arguments. Since the crawler requires a bash pattern for matching, it is critical that you pass it in quotes in order to prevent bash itself from interpreting the pattern. For example:
@@ -59,6 +66,7 @@ in which case the pattern used for matching becomes *test.txt*. So make sure to 
 
 If you are rusty on bash patterns, see the below section for a brief refresher.
 
+<a name="about.bash.patterns"></a>
 ### About Bash Patterns
 
 '\*'     - Matches all strings, including the empty/null string.
@@ -69,14 +77,15 @@ If you are rusty on bash patterns, see the below section for a brief refresher.
 
 **Examples**:
 
-'*file?.txt*' matches '*file1.txt*', '*file2.txt*', and '*file8.txt*', but not '*fil1.txt*', '*file.txt*', or '*file10.txt*'.
+'**file?.txt**' matches '**file1.txt**', '**file2.txt**', and '**file8.txt**', but not '**fil1.txt**', '**file.txt**', or '**file10.txt**'.
 
-'**.txt*' matches '*test.txt*', '*.t.txt*', and '*.txt*', but not '*test.pdf*', '*test.png*', or '  '.
+'***.txt**' matches '**test.txt**', '**.t.txt**', and '**.txt**', but not '**test.pdf**', '**test.png**', or '  '.
 
-'*[0-9]+*' matches '*0*', '*001*', and '*99*', but not '*1A*', '*A1*', or '*TEST*'.
+'**[0-9]+**' matches '**0**', '**001**', and '**99**', but not '**1A**', '**A1**', or '**TEST**'.
 
-'*\[^0-9]+*' matches '*TEST*', '*(A)*', and '*-B*', but not '*A1*', '*100*', or '*TEST__9*'.
+'**\[^0-9]+**' matches '**TEST**', '**(A)**', and '**-B**', but not '**A1**', '**100**', or '**TEST__9**'.
 
+<a name="command.line.arguments"></a>
 ### Command Line Arguments
 
 Below is an overview of all the available command line arguments supported by the crawler program.
@@ -99,6 +108,7 @@ Below is an overview of all the available command line arguments supported by th
 | ```--usage```                |           | Displays the full usage message, then exits.                 |
 | ```-V, --version```          |           | Displays the current version, then exits.                    |
 
+<a name="contributing"></a>
 ## Contributing
 
 If there is a bug or a new feature you think would be useful/cool, feel free to contribute to the project by opening your own branch and pull request:
@@ -114,6 +124,7 @@ If there is a bug or a new feature you think would be useful/cool, feel free to 
 
 Kindly name your new features with the branch name 'feature/*name*' where *name* is a brief name of the feature. For fixes, name the branch 'fix/*name*' with *name* being the name/descriptor of the issue.
 
+<a name="license"></a>
 ## License
 
 [MIT License](https://github.com/cvikupitz/cfc/blob/master/LICENSE)
