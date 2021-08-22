@@ -118,7 +118,7 @@ static void process_directory(DIR *dir, CrDir *crDir, struct crawler_args_t *inf
 
             /* Checks the directory name against the regex */
             /* Do so if -F flag is on and minimum depth has been reached */
-            if (GET_BIT(flags, CHECK_FOLDERS) && minDepth > 0) {
+            if (GET_BIT(flags, CHECK_FOLDERS) && minDepth <= 0) {
                 /* If is a match, add the name to results */
                 if ((!(GET_BIT(flags, CONFLICT))) == regex_engine_isMatch(regex, dent->d_name)) {
                     sprintf(buffer, "%s%s", crDir->path, dent->d_name);
